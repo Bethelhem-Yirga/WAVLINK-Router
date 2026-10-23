@@ -158,7 +158,7 @@ idx = data.find(bytes.fromhex('21200002 21c84002 09f82003'))
 print(f'Gadget offset: {hex(idx)}')
 "
 ```
-![alt text](/screenshots/rop1.png)
+![alt text](/screenshots/pyt.png)
 
 `gadget offset`: `0x26cd4`
 
