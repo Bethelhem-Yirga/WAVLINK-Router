@@ -3,7 +3,7 @@
 ## 1. Overview
 This project demonstrates the complete exploitation chain, resulting in unauthenticated Remote Code Execution (RCE) on the WAVLINK WN535M1 router.
 
-The exploit overflows a stack buffer via the `HTTP_COOKIE` header, hijacks the instruction pointer ($ra), and executes a ROP chain `(ret2libc)` to call system`("/bin/sh")`. We then leverage the shell to force the router to download a file from our attacker VM directly into its web root (Arbitrary File Drop).
+The exploit overflows a stack buffer via the `HTTP_COOKIE` header, hijacks the instruction pointer ($ra), and executes a ROP chain `(ret2libc)` to call system`("/bin/sh")`. then I leverage the shell to force the router to download a file from my attacker VM directly into its web root (Arbitrary File Drop).
 
 ### Prerequisites
 **Target:** Emulated WAVLINK firmware running via Lighttpd + QEMU user-mode.
@@ -15,7 +15,7 @@ The exploit overflows a stack buffer via the `HTTP_COOKIE` header, hijacks the i
 ## 2. Lab Setup & Emulation
 
 ## 2.1 Acquire the Firmware
-Place the firmware image in a dedicated lab directory.
+I Place the firmware image in a dedicated lab directory.
 
 ![alt text](/screenshots/0.png)
 
@@ -74,7 +74,7 @@ curl -i -X GET http://127.0.0.1/cgi-bin/export_pingortrace.cgi
 
 ![alt text](/screenshots/Screenshot1.png)
 
-The target runs a lightweight embedded Linux environment using `lighttpd` and CGI scripts. When the device is accessed (in this lab, via the emulated Lighttpd harness on `127.0.0.1:8080`), it presents a standard login screen prompting for a password.
+The target runs a lightweight embedded Linux environment using `lighttpd` and CGI scripts. When the device is accessed (in my lab, via the emulated Lighttpd harness on `127.0.0.1:8080`), it presents a standard login screen prompting for a password.
 
 However, the vulnerable endpoint-`/cgi-bin/export_pingortrace.cgi`-is accessible before any authentication takes place. An attacker does not need valid credentials or an active session to trigger the buffer overflow.
 
@@ -124,7 +124,7 @@ cat /proc/$PID/maps | grep libc
 0x80c00000. This is LIBC_BASE address.
 
 ## 5.3 Find the Function and String Offsets
-Now we look inside libc.so to find the offsets for system() and "/bin/sh":
+Now I look inside libc.so to find the offsets for system() and "/bin/sh":
 
 ```bash
 readelf -Ds lib/libc.so | grep system
@@ -208,10 +208,10 @@ Offset      Content                  Purpose
 ```
 
 ## 6. Proof of Concept (Arbitrary File Drop)
-To prove RCE, trigger the ROP chain to call `system("/bin/sh")`.  then feed a command via the POST body to force the router to download a file from our attacker VM.
+To prove RCE, trigger the ROP chain to call `system("/bin/sh")`.  then feed a command via the POST body to force the router to download a file from my attacker VM.
 
 ### Step 1: Start the Attacker File Server
-First, host the file I want the router to download. In a new terminal on attacker VM, create the payload file and start a Python HTTP server on port 8000.
+First, host the file I want the router to download. In a new terminal on my attacker VM, create the payload file and start a Python HTTP server on port 8000.
 
 ```bash
 mkdir -p /tmp/drop
@@ -240,6 +240,4 @@ wget http://127.0.0.1/pwned.txt
 ```
 ![alt text](/screenshots/op1.png) ![alt text](/screenshots/op2.png)
 
-## Credits
-Vulnerability discovery and PoC by [wcndsb-sketch](https://github.com/wcndsb-sketch).
 
