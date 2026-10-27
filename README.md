@@ -1,5 +1,15 @@
 # WAVLINK Router: WAVLINK WN535M1 Pre-Auth Buffer Overflow
 
+## Table of Contents
+- [1. Overview](#1-overview)
+- [2. Lab Setup & Emulation](#2-lab-setup--emulation)
+- [3. Affected Device & Pre-Auth Context](#3-affected-device--pre-auth-context)
+- [4. Vulnerability Analysis](#4-vulnerability-analysis)
+- [5. Exploit Development & Finding the Offsets](#5-exploit-development--finding-the-offsets)
+- [6. Proof of Concept: Arbitrary File Drop](#6-proof-of-concept-arbitrary-file-drop)
+- [7. Demo](#7-demo)
+
+
 ## 1. Overview
 This project demonstrates the complete exploitation chain, resulting in unauthenticated Remote Code Execution (RCE) on the WAVLINK WN535M1 router.
 
@@ -259,8 +269,9 @@ Because wget command saved the file directly into the router's web directory (/v
 ```bash
 wget http://127.0.0.1/pwned.txt
 ```
-![alt text](/screenshots/op1.png) ![alt text](/screenshots/op2.png)
 
 
-<video src="exploit_demo.mp4" controls width="800"></video>
 
+
+## 7. Demo
+![Exploit Demo](screenshots/demo.gif)
